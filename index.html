@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Super AI Gemini</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg-main: #0b0d12;
+      --bg-card: #151923;
+      --bg-card-hover: #1e2433;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.35);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --border: #232938;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: rgba(11, 13, 18, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .model-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero {
+      margin: auto 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .super-orb {
+      width: 74px;
+      height: 74px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 10px 30px var(--accent-glow);
+      margin-bottom: 18px;
+      transform: rotate(-4deg);
+    }
+
+    .hero h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .hero p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .quick-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .quick-card:active {
+      background: var(--bg-card-hover);
+    }
+
+    .quick-card .emoji {
+      font-size: 20px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .quick-card .q-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .quick-card .q-sub {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .messages {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 85%;
+    }
+
+    .msg-row.user {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .msg-row.ai {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .msg-sender {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      padding: 0 4px;
+    }
+
+    .msg-bubble {
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 14.5px;
+      line-height: 1.5;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .msg-row.user .msg-bubble {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-row.ai .msg-bubble {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+    }
+
+    .gen-img-wrap {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .gen-img {
+      width: 100%;
+      max-width: 280px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: block;
+      background: #0b0d12;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+    }
+
+    .save-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .input-area {
+      padding: 10px 14px 16px;
+      background: var(--bg-main);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 8px 6px 14px;
+    }
+
+    .input-wrapper input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 15px;
+      padding: 8px 0;
+    }
+
+    .input-wrapper input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .action-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      background: #10131c;
+      border-right: 1px solid var(--border);
+      z-index: 50;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .drawer-brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .create-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .chat-history {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .history-entry {
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+    }
+
+    .history-entry.active {
+      background: var(--bg-card);
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="drawer-backdrop" id="backdrop" onclick="toggleDrawer(false)"></div>
+
+  <aside class="drawer" id="drawer">
+    <div class="drawer-top">
+      <div class="drawer-brand">Super AI</div>
+      <button class="icon-btn" onclick="toggleDrawer(false)">✕</button>
+    </div>
+
+    <button class="create-btn" onclick="startNewChat()">+ Новый диалог</button>
+
+    <div class="section-label">Недавние чаты</div>
+    <div class="chat-history" id="historyList"></div>
+  </aside>
+
+  <header class="header">
+    <button class="icon-btn" onclick="toggleDrawer(true)">☰</button>
+    <div class="model-selector">
+      <span class="status-dot"></span>
+      <span id="modelName">Gemini AI</span>
+    </div>
+    <button class="icon-btn" onclick="startNewChat()" title="Новый чат">➕</button>
+  </header>
+
+  <main class="chat-container" id="chatContainer">
+    <div class="hero" id="heroScreen">
+      <div class="super-orb">S</div>
+      <h1>Привет, я Super Gemini</h1>
+      <p>Задай вопрос нейросети или попроси показать фото</p>
+
+      <div class="quick-grid">
+        <div class="quick-card" onclick="quickAsk('Покажи фото')">
+          <span class="emoji">🖼️</span>
+          <div class="q-title">Показать фото</div>
+          <div class="q-sub">Твои личные снимки</div>
+        </div>
+        <div class="quick-card" onclick="quickAsk('Придумай крутую идею для проекта')">
+          <span class="emoji">🚀</span>
+          <div class="q-title">Идея проекта</div>
+          <div class="q-sub">Для игр и творчества</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+  </main>
+
+  <footer class="input-area">
+    <div class="input-wrapper">
+      <input type="text" id="userInput" placeholder="Спроси Google Gemini..." onkeydown="if(event.key==='Enter') sendMsg()" />
+      <button class="action-btn" onclick="sendMsg()">➤</button>
+    </div>
+  </footer>
+
+  <script>
+    // Твой API ключ Gemini
+    const GEMINI_API_KEY = "AQ.Ab8RN6IbwfKDpO3ZVewev_m3NoLVk0cIiMKrESn5FdSu5v_jbw";
+
+    // Твои 6 личных фотографий
+    const PERSONAL_IMAGES = [
+      "https://i.postimg.cc/VNDHbVHM/IMG-a0b3324c-123c-4719-a23f-91db4dcbf084.jpg",
+      "https://i.postimg.cc/V5Q78Q5r/IMG-ffeae16e-7e35-4dfd-8e9b-4646caf7d9d3.jpg",
+      "https://i.postimg.cc/VNDHbVHM/IMG-a0b3324c-123c-4719-a23f-91db4dcbf084.jpg",
+      "https://i.postimg.cc/JhzCgJfB/IMG-0e76611e-2375-4756-a493-c02a4a640caa.jpg",
+      "https://i.postimg.cc/D0s9scXP/IMG-e5e3ae20-e48a-43e7-b765-e91ef07bbb82.jpg",
+      "https://i.postimg.cc/V5Q78Q5r/IMG-ffeae16e-7e35-4dfd-8e9b-4646caf7d9d3.jpg"
+    ];
+
+    const STORAGE_KEY = 'super_gemini_sessions_v1';
+    let sessions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let currentSessionId = null;
+
+    const drawer = document.getElementById('drawer');
+    const backdrop = document.getElementById('backdrop');
+    const heroScreen = document.getElementById('heroScreen');
+    const messages = document.getElementById('messages');
+    const userInput = document.getElementById('userInput');
+    const historyList = document.getElementById('historyList');
+    const chatContainer = document.getElementById('chatContainer');
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderHistory();
+    });
+
+    function toggleDrawer(show) {
+      drawer.classList.toggle('open', show);
+      backdrop.classList.toggle('open', show);
+    }
+
+    function startNewChat() {
+      currentSessionId = null;
+      messages.innerHTML = '';
+      messages.style.display = 'none';
+      heroScreen.style.display = 'flex';
+      renderHistory();
+      toggleDrawer(false);
+    }
+
+    function quickAsk(text) {
+      toggleDrawer(false);
+      userInput.value = text;
+      sendMsg();
+    }
+
+    function createBubbleElement(msg) {
+      const row = document.createElement('div');
+      row.className = `msg-row ${msg.role}`;
+
+      const sender = document.createElement('div');
+      sender.className = 'msg-sender';
+      sender.textContent = msg.role === 'user' ? 'Вы' : 'Gemini AI';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.textContent = msg.text;
+
+      if (msg.imageUrl) {
+        const wrap = document.createElement('div');
+        wrap.className = 'gen-img-wrap';
+
+        const img = new Image();
+        img.className = 'gen-img';
+        img.src = msg.imageUrl;
+
+        const btn = document.createElement('a');
+        btn.className = 'save-btn';
+        btn.href = msg.imageUrl;
+        btn.target = '_blank';
+        btn.textContent = '📥 Открыть / Скачать фото';
+
+        wrap.appendChild(img);
+        wrap.appendChild(btn);
+        bubble.appendChild(wrap);
+      }
+
+      row.appendChild(sender);
+      row.appendChild(bubble);
+      return { row, bubble };
+    }
+
+    function saveSessions() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      renderHistory();
+    }
+
+    function openSession(sessionId) {
+      const session = sessions.find(s => s.id === sessionId);
+      if (!session) return;
+
+      currentSessionId = sessionId;
+      heroScreen.style.display = 'none';
+      messages.style.display = 'flex';
+      messages.innerHTML = '';
+
+      session.messages.forEach(msg => {
+        const { row } = createBubbleElement(msg);
+        messages.appendChild(row);
+      });
+
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      renderHistory();
+      toggleDrawer(false);
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = '';
+
+      if (sessions.length === 0) {
+        historyList.innerHTML = '<div style="font-size: 12px; color: #94a3b8; padding: 6px;">История пуста</div>';
+        return;
+      }
+
+      sessions.forEach(session => {
+        const div = document.createElement('div');
+        div.className = 'history-entry' + (session.id === currentSessionId ? ' active' : '');
+        div.textContent = session.title;
+        div.onclick = () => openSession(session.id);
+        historyList.appendChild(div);
+      });
+    }
+
+    // Официальный запрос к Gemini API
+    async function callGeminiAPI(promptText) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+      
+      const data = {
+        contents: [{
+          parts: [{ text: promptText }]
+        }]
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        
+        if (result.candidates && result.candidates[0].content.parts[0].text) {
+          return result.candidates[0].content.parts[0].text.trim();
+        } else {
+          return "Не удалось получить ответ от Gemini.";
+        }
+      } catch (err) {
+        return "Ошибка сети при обращении к Gemini API.";
+      }
+    }
+
+    async function sendMsg() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      heroScreen.style.display = 'none';
+      messages.style.display = 'flex';
+      userInput.value = '';
+
+      const lower = text.toLowerCase();
+      const isImgRequest = lower.includes('нарисуй') || lower.includes('фото') || lower.includes('картинк') || lower.includes('покажи');
+
+      if (!currentSessionId) {
+        currentSessionId = Date.now().toString();
+        sessions.unshift({
+          id: currentSessionId,
+          title: (isImgRequest ? '🖼️ ' : '💬 ') + text,
+          messages: []
+        });
+        if (sessions.length > 15) sessions.pop();
+      }
+
+      const activeSession = sessions.find(s => s.id === currentSessionId);
+
+      const userMsg = { role: 'user', text: text };
+      activeSession.messages.push(userMsg);
+      messages.appendChild(createBubbleElement(userMsg).row);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      saveSessions();
+
+      const tempRow = createBubbleElement({
+        role: 'ai',
+        text: isImgRequest ? 'Загружаю фото...' : 'Gemini думает...'
+      }).row;
+      messages.appendChild(tempRow);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      let aiMsg;
+      if (isImgRequest) {
+        const randomIndex = Math.floor(Math.random() * PERSONAL_IMAGES.length);
+        const imgUrl = PERSONAL_IMAGES[randomIndex];
+        tempRow.remove();
+        aiMsg = {
+          role: 'ai',
+          text: `Держи снимок из коллекции (вариант #${randomIndex + 1}):`,
+          imageUrl: imgUrl
+        };
+      } else {
+        const geminiReply = await callGeminiAPI(text);
+        tempRow.remove();
+        aiMsg = {
+          role: 'ai',
+          text: geminiReply
+        };
+      }
+
+      activeSession.messages.push(aiMsg);
+      messages.appendChild(createBubbleElement(aiMsg).row);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      saveSessions();
+    }
+  </script>
+</body>
+</html>
